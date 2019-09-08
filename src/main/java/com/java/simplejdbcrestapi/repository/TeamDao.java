@@ -2,10 +2,12 @@ package com.java.simplejdbcrestapi.repository;
 
 import java.util.List;
 
+import com.java.simplejdbcrestapi.bean.SalesOrderHeaderDetail;
 import com.java.simplejdbcrestapi.bean.Team;
 import com.java.simplejdbcrestapi.bean.TeamFormat;
 public interface TeamDao {
 
+	public List<SalesOrderHeaderDetail> getSalesOrderList(int fromDoco, int toDoco);
 	public List<TeamFormat> getJSONTeamList();
 	public List<TeamFormat> getXMLTeamList();
 	public List<TeamFormat> getWildcardTeam(String name);
