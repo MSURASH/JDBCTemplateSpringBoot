@@ -1,16 +1,21 @@
 package com.java.simplejdbcrestapi.bean;
 
 import java.io.Serializable;
-import java.util.Date;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class SalesOrderHeaderDetail implements Serializable {
 
 	private int doco;
 	private int lnid;
+	//@JsonIgnore
 	private String kcoo;
+	//@JsonIgnore
 	private String dcto;
+	//@JsonIgnore
 	private String litm;
 	// private String trdj;
+	//@JsonIgnore
 	private int shpn;
 	private String ssts;
 
@@ -43,7 +48,16 @@ public class SalesOrderHeaderDetail implements Serializable {
 		this.ssts = ssts;
 	}
 
-
+	public SalesOrderHeaderDetail(int doco, int lnid, String kcoo, String dcto, String litm, int shpn, String ssts) {
+		super();
+		this.doco = doco;
+		this.lnid = lnid;
+		this.kcoo = kcoo;
+		this.dcto = dcto;
+		this.litm = litm;
+		this.shpn = shpn;
+		this.ssts = ssts;
+	}
 
 	public int getDoco() {
 		return doco;

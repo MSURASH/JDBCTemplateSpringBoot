@@ -27,12 +27,22 @@ public class TeamController {
 
 	@Autowired
 	TeamDao teamDao;
+	
+	@RequestMapping(value = "/proc", method = RequestMethod.GET, produces = { MediaType.APPLICATION_JSON_VALUE })
+	public List<SalesOrderHeaderDetail> getSOProc(@RequestParam("fDoco") int fDoco, @RequestParam("tDoco") int tDoco) {
+		return teamDao.getSalesOrderDetailProc(fDoco, tDoco);
+	}
 
-	//@GetMapping("/salesdt")
-	//@RequestMapping(value = "/salesdt", method = RequestMethod.GET, produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
-	@RequestMapping(value = "/salesdt", method = RequestMethod.GET, produces = {MediaType.APPLICATION_JSON_VALUE})
-	public List<SalesOrderHeaderDetail> getSOList(@RequestParam("fDoco") int fDoco,
-			@RequestParam("tDoco") int tDoco) {
+	// @GetMapping("/salesdt")
+	// @RequestMapping(value = "/salesdt", method = RequestMethod.GET, produces =
+	// {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
+	@RequestMapping(value = "/salesdtj", method = RequestMethod.GET, produces = { MediaType.APPLICATION_JSON_VALUE })
+	public List<SalesOrderHeaderDetail> getSOListJson(@RequestParam("fDoco") int fDoco, @RequestParam("tDoco") int tDoco) {
+		return teamDao.getSalesOrderList(fDoco, tDoco);
+	}
+
+	@RequestMapping(value = "/salesdtx", method = RequestMethod.GET, produces = { MediaType.APPLICATION_XML_VALUE })
+	public List<SalesOrderHeaderDetail> getSOListXml(@RequestParam("fDoco") int fDoco, @RequestParam("tDoco") int tDoco) {
 		return teamDao.getSalesOrderList(fDoco, tDoco);
 	}
 

@@ -2,25 +2,36 @@ package com.java.simplejdbcrestapi.repository;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Iterator;
+import java.sql.Types;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.SqlOutParameter;
+import org.springframework.jdbc.core.SqlParameter;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.SqlParameterSource;
+import org.springframework.jdbc.core.simple.SimpleJdbcCall;
 import org.springframework.stereotype.Repository;
 
 import com.java.simplejdbcrestapi.bean.SalesOrderHeaderDetail;
 import com.java.simplejdbcrestapi.bean.Team;
 import com.java.simplejdbcrestapi.bean.TeamFormat;
 
+import oracle.jdbc.OracleTypes;
+
 @Repository
 public class TeamRepository implements TeamDao {
 
 	private DataSource dataSource;
 	private JdbcTemplate jdbcTemplate;
+	private SimpleJdbcCall simpleJdbcCallRefCursor;
 
 	public List<SalesOrderHeaderDetail> getSalesOrderList(int fDoco, int tDoco) {
 
@@ -35,7 +46,7 @@ public class TeamRepository implements TeamDao {
 	private List<SalesOrderHeaderDetail> updateSOList(List<SalesOrderHeaderDetail> salesOrderHeaderDetail) {
 		String sql = "select xhssts from JDEDATA920.f4215 where xhshpn = ?";
 		for (SalesOrderHeaderDetail so : salesOrderHeaderDetail) {
-			
+
 			String ssts = jdbcTemplate.queryForObject(sql, new Object[] { so.getShpn() }, String.class);
 			so.setSsts(ssts);
 			// salesOrderHeaderDetail.set(6, so);
@@ -112,6 +123,55 @@ public class TeamRepository implements TeamDao {
 		}
 	}
 
+	public List<SalesOrderHeaderDetail> getSalesOrderDetailProc(int fDoco, int tDoco) {
+		//SimpleJdbcCall simpleJdbcCallRefCursor = new SimpleJdbcCall(jdbcTemplate).withCatalogName("JDEDATA920")
+			//	.withProcedureName("JDEPROC2");
+		//SqlParameterSource parameters = new MapSqlParameterSource().addValue("FDOCO", 2544).addValue("TDOCO", 2545);
+		//Map out = simpleJdbcCallRefCursor.execute(parameters);
+//		Map out = null;
+//		try {
+//		 out = simpleJdbcCallRefCursor.execute();
+//		}catch(Exception e) {
+//			System.out.println(e.getMessage());
+//		}
+//		 System.out.println(out);
+//		if (out == null) {
+//			return Collections.emptyList();
+//		} else {
+//			return (List<SalesOrderHeaderDetail>) out.get("p_cursor");
+//		}
+		
+		Map<String, Object> map =
+				simpleJdbcCallRefCursor.withCatalogName("JDEDATA920")
+					.withProcedureName("JDEPROC3")
+					.withoutProcedureColumnMetaDataAccess()
+		            .declareParameters(
+		                    new SqlParameter("FDOCO", Types.NUMERIC),
+		                    new SqlParameter("TDOCO", Types.NUMERIC),
+		                    new SqlOutParameter("p_cursor", OracleTypes.CURSOR, new SalesOrderProcMapper()))
+		            .execute(fDoco, tDoco);
+//		for (Map.Entry<String, Object> entry : map.entrySet()) {
+//		    System.out.println("This is KEY: "+entry.getKey() + " This is VALUE " + entry.getValue().toString());
+//		}
+		//map.forEach((key, value) -> System.out.println("This is KEY: "+key + " This is VALUE " + value));
+//		for (String keys : map.keySet())  
+//		{
+//		   //System.out.println(keys + ":"+ map.get(keys));
+//			   System.out.println(keys);
+//
+//		   for (Object value : map.values()) {
+//			    System.out.println("Value = " + value);
+//			}
+//		   
+//		}
+		List<SalesOrderHeaderDetail> list = (List<SalesOrderHeaderDetail>) map.get("p_cursor");
+		//System.out.println(list);
+//		for(SalesOrderHeaderDetail s : list) {
+//			System.out.println(s.getDoco()+" "+s.getLnid()+" "+s.getLitm()+" "+s.getSsts());
+//		}
+		return list;
+	}
+
 	public DataSource getDataSource() {
 		return dataSource;
 	}
@@ -119,6 +179,7 @@ public class TeamRepository implements TeamDao {
 	@Autowired
 	public void setDataSource(DataSource dataSource) {
 		this.jdbcTemplate = new JdbcTemplate(dataSource);
+		this.simpleJdbcCallRefCursor= new SimpleJdbcCall(jdbcTemplate);
 	}
 
 	public JdbcTemplate getJdbcTemplate() {
@@ -128,6 +189,16 @@ public class TeamRepository implements TeamDao {
 	public void setJdbcTemplate(JdbcTemplate jdbcTemplate) {
 		this.jdbcTemplate = jdbcTemplate;
 	}
+
+//	@Autowired
+//	public void intit() {
+//		// System.out.println("Came to Data simpleJdbcCallRefCursor");
+//
+//		jdbcTemplate.setResultsMapCaseInsensitive(true);
+//		simpleJdbcCallRefCursor = new SimpleJdbcCall(jdbcTemplate).withCatalogName("JDEDATA920").withProcedureName("JDEPROC3")
+//				.returningResultSet("p_cursor", BeanPropertyRowMapper.newInstance(SalesOrderProcMapper.class));
+//
+//	}
 
 	private static final class TeamMapper implements RowMapper<TeamFormat> {
 
@@ -149,6 +220,16 @@ public class TeamRepository implements TeamDao {
 			SalesOrderHeaderDetail salesOrderHeaderDetail = new SalesOrderHeaderDetail(rs.getInt("SDDOCO"),
 					rs.getInt("SDLNID"), rs.getString("SDKCOO"), rs.getString("SDDCTO"), rs.getString("SDLITM").trim(),
 					rs.getInt("SDSHPN"));
+			return salesOrderHeaderDetail;
+		}
+	}
+
+	private static final class SalesOrderProcMapper implements RowMapper<SalesOrderHeaderDetail> {
+
+		public SalesOrderHeaderDetail mapRow(ResultSet rs, int rowNum) throws SQLException {
+			SalesOrderHeaderDetail salesOrderHeaderDetail = new SalesOrderHeaderDetail(rs.getInt("SDDOCO"),
+					rs.getInt("SDLNID"), rs.getString("SDKCOO"), rs.getString("SDDCTO"), rs.getString("SDLITM").trim(),
+					rs.getInt("SDSHPN"), rs.getString("XHSSTS"));
 			return salesOrderHeaderDetail;
 		}
 	}

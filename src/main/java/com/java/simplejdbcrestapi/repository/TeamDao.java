@@ -16,5 +16,5 @@ public interface TeamDao {
 	public String updateTeam(String teams, int doco, int lnid) ;	
 	public String updateTeam(String teams, String city, int doco, int lnid);	
 	public String createTeam(Team team);
-	
+	public List<SalesOrderHeaderDetail> getSalesOrderDetailProc(int fromDoco, int toDoco);	
 }
